@@ -30,11 +30,17 @@ async function run() {
         await client.connect();
 
         const artcraftCollection = client.db('artCraftDB').collection('artCraft');
-        //client site theke receive
+        //client site theke receive or create 
         app.post('/artCraft', async (req, res) => {
             const newItem = req.body;
             console.log(newItem);
             const result = await artcraftCollection.insertOne(newItem);
+            res.send(result);
+        })
+
+        app.get('/artCraft', async (req, res) => {
+            const cursor = artcraftCollection.find();
+            const result = await cursor.toArray();
             res.send(result);
         })
         // Send a ping to confirm a successful connection
