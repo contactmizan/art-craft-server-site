@@ -1,21 +1,21 @@
-const express = require('express')
+const express = require('express');
 const cors = require('cors');
-require('dotenv').config()
+require('dotenv').config();
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb'); // Import ObjectId
+
 const app = express();
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
 
-//middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-console.log(process.env.DB_USER)
-console.log(process.env.DB_PASS)
+console.log(process.env.DB_USER);
+console.log(process.env.DB_PASS);
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.9czch.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-console.log(uri);
+console.log("MongoDB URI:", uri);
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -26,39 +26,75 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        // Connect the client to the server	(optional starting in v4.7)
+        // Connect to MongoDB
         await client.connect();
+        console.log("Connected to MongoDB");
 
+        // Database and Collection
         const artcraftCollection = client.db('artCraftDB').collection('artCraft');
-        //client site theke receive or create 
+
+        //  API to Add a New Item
         app.post('/artCraft', async (req, res) => {
             const newItem = req.body;
-            console.log(newItem);
-            const result = await artcraftCollection.insertOne(newItem);
-            res.send(result);
-        })
+            console.log("Adding new item:", newItem);
+            try {
+                const result = await artcraftCollection.insertOne(newItem);
+                res.send(result);
+            } catch (error) {
+                console.error("Error inserting item:", error);
+                res.status(500).send({ error: "Internal Server Error" });
+            }
+        });
 
+        //  API to Get All Items
         app.get('/artCraft', async (req, res) => {
-            const cursor = artcraftCollection.find();
-            const result = await cursor.toArray();
-            res.send(result);
-        })
+            try {
+                const cursor = artcraftCollection.find();
+                const result = await cursor.toArray();
+                res.send(result);
+            } catch (error) {
+                console.error("Error fetching items:", error);
+                res.status(500).send({ error: "Internal Server Error" });
+            }
+        });
+
+        //  API to Get a Single Item by ID
+        app.get('/artCraft/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log("Fetching item with ID:", id);
+
+            try {
+                const query = { _id: new ObjectId(id) }; // Convert ID to ObjectId
+                const item = await artcraftCollection.findOne(query);
+
+                if (!item) {
+                    return res.status(404).send({ error: "Item not found" });
+                }
+
+                res.send(item);
+            } catch (error) {
+                console.error("Error fetching item:", error);
+                res.status(500).send({ error: "Internal Server Error" });
+            }
+        });
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    } finally {
-        // Ensures that the client will close when you finish/error
-        // await client.close();
+
+    } catch (error) {
+        console.error("Error connecting to MongoDB:", error);
     }
 }
+
 run().catch(console.dir);
 
-
-
+// ✅ Test Route to Check if Server is Running
 app.get('/', (req, res) => {
     res.send('Art & Craft server is running');
-})
+});
 
+// ✅ Start the Server
 app.listen(port, () => {
-    console.log(`Art & Craft server is running on port: ${port}`)
-})
+    console.log(`Art & Craft server is running on port: ${port}`);
+});
