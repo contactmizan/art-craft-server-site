@@ -65,20 +65,35 @@ async function run() {
 
         // PUT Route: Update an artCraft item by ID
         app.get('/artCraft/:id', async (req, res) => {
-            const { id } = req.params;
-            try {
-                const artCraftCollection = client.db('artCraftDB').collection('artCraft');
-                const item = await artCraftCollection.findOne({ _id: new ObjectId(id) });
-
-                if (item) {
-                    res.status(200).json(item);
-                } else {
-                    res.status(404).json({ message: "Item not found" });
-                }
-            } catch (error) {
-                res.status(500).json({ message: "Error fetching item", error });
-            }
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await artcraftCollection.findOne(query);
+            res.send(result);
         });
+
+        //updated from backend
+        app.put('/artCraft/:id', async (req, res) => {
+            const id = req.params.id;
+            filter = { _id: new ObjectId(id) }
+            const options = { upsert: true };
+            const updatedItem = req.body;
+            const updated = {
+                $set: {
+                    photo: updatedItem.photo,
+                    item: updatedItem.item,
+                    subcategory: updatedItem.subcategory,
+                    description: updatedItem.description,
+                    price: updatedItem.price,
+                    rating: updatedItem.rating,
+                    customization: updatedItem.customization, processTime: updatedItem.processTime,
+                    stock: updatedItem.stock,
+                    email: updatedItem.email,
+                    name: updatedItem.name
+                }
+            }
+            const result = await artcraftCollection.updateOne(filter, updated, options);
+            res.send(result);
+        })
 
         // DELETE Route: Delete an artCraft item by ID
         app.delete('/artCraft/:id', async (req, res) => {
