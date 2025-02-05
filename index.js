@@ -25,6 +25,7 @@ async function run() {
         // Connect to MongoDB server
         await client.connect();
         const artcraftCollection = client.db('artCraftDB').collection('artCraft');
+        
 
         // POST Route: Add new artCraft item
         app.post('/artCraft', async (req, res) => {
@@ -120,4 +121,4 @@ app.listen(port, () => {
     console.log(`Art & Craft server is running on port: ${port}`);
 });
 
-run().catch(console.dir);
+// run().catch(console.dir);
