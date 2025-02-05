@@ -111,6 +111,10 @@ async function run() {
     }
 }
 
+app.get('/', (req, res) => {
+    res.send('ArtCraft making server is running');
+})
+
 // Start server
 app.listen(port, () => {
     console.log(`Art & Craft server is running on port: ${port}`);
