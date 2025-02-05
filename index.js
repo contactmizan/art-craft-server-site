@@ -23,7 +23,10 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect to MongoDB server
-        await client.connect();
+        if (!client.topology || !client.topology.isConnected()) {
+            await client.connect();
+        }
+        
         const artcraftCollection = client.db('artCraftDB').collection('artCraft');
         
 
@@ -121,4 +124,4 @@ app.listen(port, () => {
     console.log(`Art & Craft server is running on port: ${port}`);
 });
 
-// run().catch(console.dir);
+run().catch(console.dir);
