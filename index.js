@@ -1,8 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
+require('dotenv').config();
 const port = process.env.PORT || 5000;
 
 // Middleware
@@ -124,4 +124,4 @@ app.listen(port, () => {
     console.log(`Art & Craft server is running on port: ${port}`);
 });
 
-run().catch(console.dir);
+// run().catch(console.dir);
