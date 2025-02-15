@@ -1,12 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const app = express();
 require('dotenv').config();
-const port = process.env.PORT || 5000;
+
+const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: '*', // Allow all origins (for testing, restrict in production)
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // MongoDB URI & Client setup
@@ -22,9 +26,9 @@ const client = new MongoClient(uri, {
 // Connect to MongoDB and define routes
 async function run() {
     try {
-        // Connect to MongoDB server
         await client.connect(); // Ensure connection before defining routes
-        
+        console.log("Connected to MongoDB successfully!");
+
         const artcraftCollection = client.db('artCraftDB').collection('artCraft');
 
         // POST Route: Add new artCraft item
@@ -108,7 +112,6 @@ async function run() {
             }
         });
 
-        console.log("Connected to MongoDB successfully!");
     } catch (err) {
         console.error("Failed to connect to MongoDB", err);
     }
@@ -119,10 +122,8 @@ app.get('/', (req, res) => {
     res.send('ArtCraft making server is running');
 });
 
-// Start server
-app.listen(port, () => {
-    console.log(`Art & Craft server is running on port: ${port}`);
-});
-
-// Ensure MongoDB connection is established
+// Run MongoDB connection
 run().catch(console.dir);
+
+// Export for Vercel
+module.exports = app;
