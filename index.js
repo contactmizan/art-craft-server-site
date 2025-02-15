@@ -19,36 +19,32 @@ const client = new MongoClient(uri, {
     }
 });
 
-// Connect to MongoDB and handle routes
+// Connect to MongoDB and define routes
 async function run() {
     try {
         // Connect to MongoDB server
-        if (!client.topology || !client.topology.isConnected()) {
-            await client.connect();
-        }
+        await client.connect(); // Ensure connection before defining routes
         
         const artcraftCollection = client.db('artCraftDB').collection('artCraft');
-        
 
         // POST Route: Add new artCraft item
         app.post('/artCraft', async (req, res) => {
-            const newItem = req.body;
             try {
+                const newItem = req.body;
                 const result = await artcraftCollection.insertOne(newItem);
-                res.status(200).send(result);
+                res.status(201).json(result);
             } catch (err) {
-                res.status(500).send('Failed to add item');
+                res.status(500).json({ error: 'Failed to add item', details: err.message });
             }
         });
 
         // GET Route: Fetch all artCraft items
         app.get('/artCraft', async (req, res) => {
             try {
-                const cursor = artcraftCollection.find();
-                const result = await cursor.toArray();
-                res.status(200).send(result);
+                const result = await artcraftCollection.find().toArray();
+                res.status(200).json(result);
             } catch (err) {
-                res.status(500).send('Failed to fetch items');
+                res.status(500).json({ error: 'Failed to fetch items', details: err.message });
             }
         });
 
@@ -57,71 +53,76 @@ async function run() {
             const { id } = req.params;
             try {
                 const item = await artcraftCollection.findOne({ _id: new ObjectId(id) });
-                if (item) {
-                    res.status(200).send(item);
-                } else {
-                    res.status(404).send({ message: 'Item not found' });
+                if (!item) {
+                    return res.status(404).json({ message: 'Item not found' });
                 }
+                res.status(200).json(item);
             } catch (err) {
-                res.status(500).send('Error fetching item');
+                res.status(500).json({ error: 'Error fetching item', details: err.message });
             }
         });
 
         // PUT Route: Update an artCraft item by ID
-        app.get('/artCraft/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) }
-            const result = await artcraftCollection.findOne(query);
-            res.send(result);
-        });
-
-        //updated from backend
         app.put('/artCraft/:id', async (req, res) => {
-            const id = req.params.id;
-            filter = { _id: new ObjectId(id) }
-            const options = { upsert: true };
-            const updatedItem = req.body;
-            const updated = {
-                $set: {
-                    photo: updatedItem.photo,
-                    item: updatedItem.item,
-                    subcategory: updatedItem.subcategory,
-                    description: updatedItem.description,
-                    price: updatedItem.price,
-                    rating: updatedItem.rating,
-                    customization: updatedItem.customization, processTime: updatedItem.processTime,
-                    stock: updatedItem.stock,
-                    email: updatedItem.email,
-                    name: updatedItem.name
-                }
+            try {
+                const id = req.params.id;
+                const filter = { _id: new ObjectId(id) };
+                const updatedItem = req.body;
+
+                const updateDoc = {
+                    $set: {
+                        photo: updatedItem.photo,
+                        item: updatedItem.item,
+                        subcategory: updatedItem.subcategory,
+                        description: updatedItem.description,
+                        price: updatedItem.price,
+                        rating: updatedItem.rating,
+                        customization: updatedItem.customization,
+                        processTime: updatedItem.processTime,
+                        stock: updatedItem.stock,
+                        email: updatedItem.email,
+                        name: updatedItem.name
+                    }
+                };
+
+                const options = { upsert: true };
+                const result = await artcraftCollection.updateOne(filter, updateDoc, options);
+                res.status(200).json(result);
+            } catch (err) {
+                res.status(500).json({ error: 'Failed to update item', details: err.message });
             }
-            const result = await artcraftCollection.updateOne(filter, updated, options);
-            res.send(result);
-        })
+        });
 
         // DELETE Route: Delete an artCraft item by ID
         app.delete('/artCraft/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: new ObjectId(id) }
-            const result = await artcraftCollection.deleteOne(query);
-            res.send(result);
+            try {
+                const id = req.params.id;
+                const query = { _id: new ObjectId(id) };
+                const result = await artcraftCollection.deleteOne(query);
+                if (result.deletedCount === 0) {
+                    return res.status(404).json({ message: 'Item not found' });
+                }
+                res.status(200).json(result);
+            } catch (err) {
+                res.status(500).json({ error: 'Failed to delete item', details: err.message });
+            }
         });
 
-        // Send a ping to confirm the connection to MongoDB
-        // await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        console.log("Connected to MongoDB successfully!");
     } catch (err) {
         console.error("Failed to connect to MongoDB", err);
     }
 }
 
+// Root route
 app.get('/', (req, res) => {
     res.send('ArtCraft making server is running');
-})
+});
 
 // Start server
 app.listen(port, () => {
     console.log(`Art & Craft server is running on port: ${port}`);
 });
 
-// run().catch(console.dir);
+// Ensure MongoDB connection is established
+run().catch(console.dir);
