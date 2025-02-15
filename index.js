@@ -24,6 +24,7 @@ async function run() {
 
         const artcraftCollection = client.db('artCraftDB').collection('artCraft');
 
+        // POST Route: Add new artCraft item
         app.post('/artCraft', async (req, res) => {
             try {
                 const newItem = req.body;
@@ -35,6 +36,7 @@ async function run() {
             }
         });
 
+        // GET Route: Fetch all artCraft items
         app.get('/artCraft', async (req, res) => {
             try {
                 console.log("🟢 Fetching all artCraft items...");
@@ -47,6 +49,7 @@ async function run() {
             }
         });
 
+        // GET Route: Fetch a specific artCraft item by ID
         app.get('/artCraft/:id', async (req, res) => {
             try {
                 const { id } = req.params;
@@ -61,6 +64,7 @@ async function run() {
             }
         });
 
+        // PUT Route: Update an artCraft item by ID
         app.put('/artCraft/:id', async (req, res) => {
             try {
                 const id = req.params.id;
@@ -75,6 +79,7 @@ async function run() {
             }
         });
 
+        // DELETE Route: Delete an artCraft item by ID
         app.delete('/artCraft/:id', async (req, res) => {
             try {
                 const id = req.params.id;
@@ -92,10 +97,11 @@ async function run() {
     }
 }
 
+// Root Route
 app.get('/', (req, res) => {
     res.send('ArtCraft making server is running');
 });
 
 run().catch(console.dir);
 
-module.exports = app;
+module.exports = app;  // Ensure export for Vercel to recognize the app
